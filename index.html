@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Equation Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        /* Use Inter as the default font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Use Roboto Mono for equations for better readability */
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        /* Custom class for the steps */
+        .steps-formatting {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #f9fafb; /* bg-gray-50 */
+            padding: 1rem; /* p-4 */
+            border-radius: 0.5rem; /* rounded-lg */
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            line-height: 2.25; /* Increased line-height for fractions */
+        }
+        
+        /* CSS for rendering fractions */
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            text-align: center;
+            margin: 0 0.15em;
+            position: relative;
+        }
+        .numerator {
+            padding: 0 0.1em;
+            border-bottom: 2px solid currentColor;
+            line-height: 1;
+        }
+        .denominator {
+            padding: 0 0.1em;
+            line-height: 1;
+        }
+        /* Adjust alignment for large text in question */
+        #question-display .fraction {
+            top: -0.3em;
+        }
+        /* Adjust alignment for text in steps and answers */
+        .steps-formatting .fraction,
+        #correct-answer-display .fraction {
+            top: -0.1em;
+            line-height: 1.1;
+        }
+        .steps-formatting .numerator,
+        #correct-answer-display .fraction .numerator {
+            border-bottom-width: 1px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="welcome-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-lg">
+        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-2">Welcome!</h1>
+        <p class="text-center text-gray-600 mb-6">Enter your name to start the challenge.</p>
+        
+        <div class="mb-4">
+            <label for="name-input" class="block text-sm font-medium text-gray-700 mb-1">Your English Name:</label>
+            <input type="text" id="name-input" class="w-full text-xl font-mono p-3 border-2 border-gray-200 rounded-lg bg-white shadow-sm" placeholder="e.g. Alex Smith">
+        </div>
+        
+        <button id="start-game-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg text-lg shadow-md transition-transform transform hover:scale-105">
+            Start Game
+        </button>
+    </div>
+
+
+    <div id="main-game-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-lg hidden">
+        
+        <div id="verification-code-display" class="font-mono text-sm text-gray-500 text-right -mt-2 mb-2"></div>
+
+        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-2">Equation Challenge</h1>
+        <p class="text-center text-gray-600 mb-6">Solve for x!</p>
+
+        <div class="flex justify-between items-center mb-4">
+            <button id="change-level-btn" class="hidden text-sm text-indigo-600 hover:text-indigo-800 transition-colors">&larr; Change Level</button>
+            <div id="score-display" class="text-2xl font-bold text-indigo-700 w-full text-right">Score: 0</div>
+        </div>
+
+        <div id="level-selection">
+            <h2 class="text-xl font-semibold text-center text-gray-800 mb-4">Choose your level:</h2>
+            <div class="grid grid-cols-1 gap-4">
+                 <button data-level="1" class="level-btn bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg text-lg shadow-md transition-transform transform hover:scale-105">
+                    Level 1: Simple
+                </button>
+                <button data-level="2" class="level-btn bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-4 px-6 rounded-lg text-lg shadow-md transition-transform transform hover:scale-105">
+                     Level 2: Variables Both Sides
+                </button>
+                <button data-level="3" class="level-btn bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-lg text-lg shadow-md transition-transform transform hover:scale-105">
+                    Level 3: Fractions & Brackets
+                </button>
+             </div>
+        </div>
+
+        <div id="game-board" class="hidden">
+            <div class="bg-gray-100 p-6 rounded-lg mb-6 shadow-inner min-h-[8rem] flex items-center justify-center">
+                <div id="question-display" class="text-3xl font-mono text-center text-gray-900 break-words">
+                     </div>
+            </div>
+
+            <input type="text" id="answer-input" readonly class="w-full text-right text-4xl font-mono p-4 border-2 border-gray-200 rounded-lg mb-6 bg-white shadow-sm" placeholder="0">
+
+             <div id="calculator-pad" class="grid grid-cols-4 gap-3">
+                <button data-value="7" class="calc-btn">7</button>
+                <button data-value="8" class="calc-btn">8</button>
+                <button data-value="9" class="calc-btn">9</button>
+                <button data-value="clear" class="calc-btn bg-yellow-500 hover:bg-yellow-600 text-white">C</button>
+    
+                <button data-value="4" class="calc-btn">4</button>
+                <button data-value="5" class="calc-btn">5</button>
+                <button data-value="6" class="calc-btn">6</button>
+                <button data-value="-" class="calc-btn bg-gray-300 hover:bg-gray-400 text-gray-800">-</button>
+             
+                <button data-value="1" class="calc-btn">1</button>
+                <button data-value="2" class="calc-btn">2</button>
+                <button data-value="3" class="calc-btn">3</button>
+                <button data-value="/" class="calc-btn bg-gray-300 hover:bg-gray-400 text-gray-800">/</button>
+                
+                <button data-value="0" class="calc-btn">0</button>
+                <button data-value="." class="calc-btn bg-gray-300 hover:bg-gray-400 text-gray-800">.</button>
+                <button data-value="submit" class="calc-btn col-span-2 bg-green-500 hover:bg-green-600 text-white">Enter</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden transition-opacity duration-300">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+             <div class="text-center mb-6">
+                <div id="feedback-icon" class="text-7xl mb-4"></div>
+                <h2 id="feedback-message" class="text-4xl font-bold"></h2>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-3">Detailed Steps:</h3>
+                <div id="feedback-steps" class="steps-formatting text-sm sm:text-base">
+                    </div>
+             </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="text-center bg-red-50 p-4 rounded-lg border border-red-200">
+                    <div class="text-sm font-semibold text-red-700 mb-1">Your Answer</div>
+                     <div id="user-answer-display" class="text-2xl font-mono font-bold text-red-600 break-words"></div>
+                </div>
+                <div class="text-center bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div class="text-sm font-semibold text-green-700 mb-1">Correct Answer</div>
+                    <div id="correct-answer-display" class="text-2xl font-mono font-bold text-green-600"></div>
+                 </div>
+            </div>
+            
+            <button id="next-question-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg text-lg shadow-md transition-transform transform hover:scale-105">
+                Next Question
+            </button>
+         </div>
+    </div>
+
+    <audio id="correct-sound" src="path/to/cheerful-correct.mp3" preload="auto"></audio>
+    <audio id="incorrect-sound" src="path/to/simple-incorrect.mp3" preload="auto"></audio>
+    <audio id="click-sound" src="path/to/calculator-click.mp3" preload="auto"></audio>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATE VARIABLES ---
+            let scores = { 1: 0, 2: 0, 3: 0 };
+            let currentLevel = 1;
+            let currentScore = 0; // This will hold the score for the *active* level
+            let currentEquation = null;
+            let currentInput = "";
+            let userName = "";
+            let verificationCode = "";
+
+            // --- REMOVED STATIC EQUATION BANK ---
+            // const equations = { ... };
+            // This object has been removed.
+
+            // --- NEW HELPER FUNCTIONS ---
+
+            /**
+             * Generates verification code from name.
+             * e.g. "Leo Chan" -> "32,26"
+             */
+            function generateVerificationCode(name) {
+                const words = name.toLowerCase().split(' ');
+                const wordSums = words.map(word => {
+                    let sum = 0;
+                    for (const char of word) {
+                        const charCode = char.charCodeAt(0);
+                        // Check if it's a letter (a-z)
+                        if (charCode >= 97 && charCode <= 122) {
+                            sum += charCode - 96; // a=1, b=2, ...
+                        }
+                    }
+                    return sum;
+                });
+                // Filter out empty words (e.g., from double spaces) which would result in a sum of 0
+                return wordSums.filter(sum => sum > 0).join(',');
+            }
+
+            /**
+             * Returns a random integer between min (inclusive) and max (inclusive).
+             * Can optionally exclude specific values.
+             */
+            function randInt(min, max, exclude = []) {
+                let num;
+                do {
+                    num = Math.floor(Math.random() * (max - min + 1)) + min;
+                } while (exclude.includes(num));
+                return num;
+            }
+
+            /**
+             * Calculates the Greatest Common Divisor of two numbers.
+             */
+            function gcd(a, b) {
+                a = Math.abs(a);
+                b = Math.abs(b);
+                return b === 0 ? a : gcd(b, a % b);
+            }
+
+            /**
+             * Simplifies a fraction and handles signs.
+             * @returns {object} { answer, display }
+             */
+            function simplifyFraction(num, den) {
+                if (den === 0) return { answer: NaN, display: "Undefined" };
+                // Avoid division by zero
+                
+                // Ensure denominator is positive
+                if (den < 0) {
+                    num = -num;
+                    den = -den;
+                }
+
+                const commonDivisor = gcd(num, den);
+                const simplifiedNum = num / commonDivisor;
+                const simplifiedDen = den / commonDivisor;
+
+                let display;
+                if (simplifiedDen === 1) {
+                    display = `${simplifiedNum}`;
+                } else {
+                    display = `[frac:${simplifiedNum}:${simplifiedDen}]`;
+                }
+
+                return {
+                    answer: simplifiedNum / simplifiedDen,
+                    display: display
+                };
+            }
+
+            /**
+             * Formats a number for display in an equation (e.g., + 5, - 3)
+             */
+            function formatOp(n) {
+                return n >= 0 ? `+ ${n}` : `- ${Math.abs(n)}`;
+            }
+            
+            /**
+             * Formats a number for display at the start of an equation (e.g. 5, -3)
+             */
+            function formatStart(n) {
+                return n >= 0 ? `${n}` : `-${Math.abs(n)}`;
+            }
+
+            /**
+             * Formats a term with 'x' (e.g., 5x, -3x, x, -x)
+             */
+            function formatX(n) {
+                if (n === 1) return "x";
+                if (n === -1) return "-x";
+                return `${n}x`;
+            }
+            
+            /**
+             * Formats a term with 'x' for the start of an equation (e.g. 5x, -3x, x, -x)
+             */
+            function formatStartX(n) {
+                 if (n === 1) return "x";
+                 if (n === -1) return "-x";
+                 return `${n}x`;
+            }
+
+            // --- NEW EQUATION GENERATORS ---
+
+            function generateLevel1() {
+                const type = randInt(1, 3);
+                let x, a, b, c, text, answer, displayAnswer, steps;
+
+                switch (type) {
+                    case 1: // ax + b = c
+                        x = randInt(-9, 9, [0]); // Get non-zero answer
+                        a = randInt(2, 6);
+                        b = randInt(-10, 10);
+                        c = a * x + b;
+                        
+                        text = `${formatStartX(a)} ${formatOp(b)} = ${c}`;
+                        answer = x;
+                        displayAnswer = `${x}`;
+                        steps = `${text}\n  ${formatX(a)} = ${c} ${formatOp(-b)}\n  ${formatX(a)} = ${c - b}\n   x = [frac:${c - b}:${a}]\n   x = ${x}`;
+                        break;
+
+                    case 2: // a - bx = c
+                        x = randInt(-9, 9, [0]);
+                        b = randInt(2, 6); // b is positive, so it's always "a - bx"
+                        a = randInt(-10, 10);
+                        c = a - b * x;
+                        
+                        text = `${a} - ${b}x = ${c}`;
+                        answer = x;
+                        displayAnswer = `${x}`;
+                        steps = `${text}\n  -${b}x = ${c} ${formatOp(-a)}\n  -${b}x = ${c - a}\n   x = [frac:${c - a}:${-b}]\n   x = ${x}`;
+                        break;
+
+                    case 3: // [frac:x:a] + b = c
+                        a = randInt(2, 5);
+                        b = randInt(-5, 5);
+                        let x_over_a = randInt(-5, 5, [0]); // This is the (x/a) part
+                        x = x_over_a * a;
+                        c = x_over_a + b;
+                        
+                        text = `[frac:x:${a}] ${formatOp(b)} = ${c}`;
+                        answer = x;
+                        displayAnswer = `${x}`;
+                        steps = `${text}\n  [frac:x:${a}] = ${c} ${formatOp(-b)}\n  [frac:x:${a}] = ${c - b}\n   x = ${c - b} * ${a}\n   x = ${x}`;
+                        break;
+                }
+                
+                return { text, answer, displayAnswer, steps };
+            }
+
+            function generateLevel2() {
+                let a, b, c, d, num, den, frac, text, answer, displayAnswer, steps;
+                // ax + b = cx + d
+                a = randInt(2, 9);
+                c = randInt(2, 9);
+                while (a === c) c = randInt(2, 9); // Ensure a != c
+                
+                b = randInt(-10, 10);
+                d = randInt(-10, 10);
+
+                num = d - b;
+                den = a - c;
+                frac = simplifyFraction(num, den);
+                text = `${formatStartX(a)} ${formatOp(b)} = ${formatStartX(c)} ${formatOp(d)}`;
+                answer = frac.answer;
+                displayAnswer = frac.display;
+                steps = `${text}\n  ${formatX(a)} ${formatOp(-c)}x = ${d} ${formatOp(-b)}\n  ${formatX(a - c)} = ${d - b}\n   x = [frac:${d - b}:${a - c}]\n   x = ${frac.display}`;
+                return { text, answer, displayAnswer, steps };
+            }
+
+            function generateLevel3() {
+                const type = randInt(1, 5); // Changed from 4 to 5
+                let a, b, c, d, e, num, den, frac, text, answer, displayAnswer, steps; // Added 'e'
+
+                switch (type) {
+                    case 1: // [frac:x:a] +/- [frac:x:b] = c
+                        a = randInt(2, 6);
+                        b = randInt(2, 6);
+                        while (a === b) b = randInt(2, 6); // a != b
+                        c = randInt(-5, 5, [0]); // non-zero c
+                        
+                        let op = randInt(0, 1) === 0 ? "+" : "-";
+                        let opSign = (op === "+") ? 1 : -1;
+                        
+                        text = `[frac:x:${a}] ${op} [frac:x:${b}] = ${c}`;
+                        // (bx +/- ax) / ab = c
+                        // (b +/- a)x = c * ab
+                        // x = (c * ab) / (b +/- a)
+                        num = c * a * b;
+                        den = b + (opSign * a);
+                        if (den === 0) return generateLevel3(); // Avoid division by zero, regenerate
+                        
+                        frac = simplifyFraction(num, den);
+                        let lcd = a * b / gcd(a, b);
+
+                        answer = frac.answer;
+                        displayAnswer = frac.display;
+                        steps = `${text}\nLCD is ${lcd}\n  [frac:${lcd/a}x:${lcd}] ${op} [frac:${lcd/b}x:${lcd}] = ${c}\n  [frac:${formatX(lcd/a)} ${op} ${formatX(lcd/b)}:${lcd}] = ${c}\n  [frac:${formatX((lcd/a) + opSign * (lcd/b))}:${lcd}] = ${c}\n  ${formatX((lcd/a) + opSign * (lcd/b))} = ${c * lcd}\n  x = [frac:${c * lcd}:${(lcd/a) + opSign * (lcd/b)}]\n  x = ${frac.display}`;
+                        break;
+
+                    case 2: // a(x + b) = c(x + d)
+                        a = randInt(2, 6);
+                        b = randInt(-5, 5, [0]);
+                        c = randInt(2, 6);
+                        while (a === c) c = randInt(2, 6); // a != c
+                        d = randInt(-5, 5, [0]);
+                        while (b === d) d = randInt(-5, 5, [0]); // b != d
+                        
+                        // ax + ab = cx + cd
+                        // (a-c)x = cd - ab
+                        num = c * d - a * b;
+                        den = a - c;
+                        // den is non-zero
+                        frac = simplifyFraction(num, den);
+                        text = `${a}(x ${formatOp(b)}) = ${c}(x ${formatOp(d)})`;
+                        answer = frac.answer;
+                        displayAnswer = frac.display;
+                        steps = `${text}\n  ${formatX(a)} ${formatOp(a*b)} = ${formatX(c)} ${formatOp(c*d)}\n  ${formatX(a)} ${formatOp(-c)}x = ${c*d} ${formatOp(-a*b)}\n  ${formatX(a-c)} = ${c*d - a*b}\n  x = [frac:${c*d - a*b}:${a-c}]\n  x = ${frac.display}`;
+                        break;
+
+                    case 3: // [frac:(x + a):b] = [frac:(x + c):d]
+                        a = randInt(-5, 5, [0]);
+                        b = randInt(2, 6);
+                        c = randInt(-5, 5, [0]);
+                        while (a === c) c = randInt(-5, 5, [0]); // a != c
+                        d = randInt(2, 6);
+                        while (b === d) d = randInt(2, 6); // b != d
+
+                        // d(x+a) = b(x+c)
+                        // dx + da = bx + bc
+                        // (d-b)x = bc - da
+                        num = b * c - d * a;
+                        den = d - b;
+                        if (den === 0) return generateLevel3(); // Regenerate if d == b
+                        
+                        frac = simplifyFraction(num, den);
+                        text = `[frac:x ${formatOp(a)}:${b}] = [frac:x ${formatOp(c)}:${d}]`;
+                        answer = frac.answer;
+                        displayAnswer = frac.display;
+                        steps = `${text}\nCross-multiply:\n  ${d}(x ${formatOp(a)}) = ${b}(x ${formatOp(c)})\n  ${formatX(d)} ${formatOp(d*a)} = ${formatX(b)} ${formatOp(b*c)}\n  ${formatX(d)} ${formatOp(-b)}x = ${b*c} ${formatOp(-d*a)}\n  ${formatX(d-b)} = ${b*c - d*a}\n  x = [frac:${b*c - d*a}:${d-b}]\n  x = ${frac.display}`;
+                        break;
+                    
+                    case 4: // a(x + b) = cx + d (Moved from Level 2)
+                        a = randInt(2, 6);
+                        b = randInt(-5, 5, [0]); // non-zero
+                        c = randInt(2, 9);
+                        d = randInt(-10, 10);
+                        while (a === c) c = randInt(2, 9); // Ensure a != c
+
+                        num = d - a * b;
+                        den = a - c;
+                        frac = simplifyFraction(num, den);
+
+                        text = `${a}(x ${formatOp(b)}) = ${formatStartX(c)} ${formatOp(d)}`;
+                        answer = frac.answer;
+                        displayAnswer = frac.display;
+                        steps = `${text}\n  ${formatX(a)} ${formatOp(a * b)} = ${formatX(c)} ${formatOp(d)}\n  ${formatX(a)} ${formatOp(-c)}x = ${d} ${formatOp(-a * b)}\n  ${formatX(a - c)} = ${d - a * b}\n   x = [frac:${d - a * b}:${a - c}]\n   x = ${frac.display}`;
+                        break;
+                    
+                    case 5: // NEW: a(x + b) = c(x + d) + e
+                        a = randInt(2, 6);
+                        b = randInt(-5, 5, [0]);
+                        c = randInt(2, 6);
+                        while (a === c) c = randInt(2, 6); // a != c
+                        d = randInt(-5, 5, [0]);
+                        e = randInt(-9, 9, [0]); // The extra constant
+                        
+                        // a(x + b) = c(x + d) + e
+                        // ax + ab = cx + cd + e
+                        // (a - c)x = cd + e - ab
+                        num = c * d + e - a * b;
+                        den = a - c;
+                        
+                        frac = simplifyFraction(num, den);
+
+                        text = `${a}(x ${formatOp(b)}) = ${c}(x ${formatOp(d)}) ${formatOp(e)}`;
+                        answer = frac.answer;
+                        displayAnswer = frac.display;
+                        steps = `${text}\n  ${formatX(a)} ${formatOp(a*b)} = ${formatX(c)} ${formatOp(c*d)} ${formatOp(e)}\n  ${formatX(a)} ${formatOp(a*b)} = ${formatX(c)} ${formatOp(c*d + e)}\n  ${formatX(a)} ${formatOp(-c)}x = ${c*d + e} ${formatOp(-a*b)}\n  ${formatX(a-c)} = ${c*d + e - a*b}\n  x = [frac:${c*d + e - a*b}:${a-c}]\n  x = ${frac.display}`;
+                        break;
+                }
+
+                return { text, answer, displayAnswer, steps };
+            }
+
+            /**
+             * Main function to generate an equation based on level.
+             */
+            function generateEquation(level) {
+                // Ensure level is treated as a number
+                const numericLevel = parseInt(level, 10);
+                switch (numericLevel) {
+                    case 1:
+                        return generateLevel1();
+                    case 2:
+                        return generateLevel2();
+                    case 3:
+                        return generateLevel3();
+                    default:
+                        console.error("Unknown level:", level);
+                        return generateLevel1();
+                }
+            }
+ 
+            // --- DOM ELEMENTS ---
+            // Welcome Screen
+            const welcomeContainer = document.getElementById('welcome-container');
+            const mainGameContainer = document.getElementById('main-game-container');
+            const nameInput = document.getElementById('name-input');
+            const startGameBtn = document.getElementById('start-game-btn');
+            const verificationCodeDisplay = document.getElementById('verification-code-display');
+
+            // Game Screen
+            const scoreDisplay = document.getElementById('score-display');
+            const levelSelection = document.getElementById('level-selection');
+            const gameBoard = document.getElementById('game-board');
+            const questionDisplay = document.getElementById('question-display');
+            const answerInput = document.getElementById('answer-input');
+            const calculatorPad = document.getElementById('calculator-pad');
+            const changeLevelBtn = document.getElementById('change-level-btn');
+            
+            // Modal Elements
+            const modal = document.getElementById('feedback-modal');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackMessage = document.getElementById('feedback-message');
+            const feedbackSteps = document.getElementById('feedback-steps');
+            const userAnswerDisplay = document.getElementById('user-answer-display');
+            const correctAnswerDisplay = document.getElementById('correct-answer-display');
+            const nextQuestionBtn = document.getElementById('next-question-btn');
+
+            // Audio Elements
+            const correctSound = document.getElementById('correct-sound');
+            const incorrectSound = document.getElementById('incorrect-sound');
+            const clickSound = document.getElementById('click-sound');
+
+
+            // --- FUNCTIONS ---
+
+            /**
+             * Renders a string with [frac:num:den] tags into HTML fractions.
+             * Also replaces newlines with <br> tags.
+             * @param {string} text - The text to format.
+             * @returns {string} HTML-formatted string.
+             */
+            function renderEquation(text) {
+                if (!text) return "";
+                // Replace newlines with <br> tags for steps
+                let html = text.replace(/\n/g, '<br>');
+                // Regex to find [frac:numerator:denominator]
+                const fracRegex = /\[frac:([^:]+):([^\]]+)\]/g;
+                html = html.replace(fracRegex, (match, num, den) => {
+                    return `
+                        <div class="fraction">
+                            <span class="numerator">${num}</span>
+                            <span class="denominator">${den}</span>
+                        </div>
+                    `;
+                });
+                return html;
+            }
+
+            // Set initial score display
+            function updateScoreDisplayAllLevels() {
+                scoreDisplay.innerHTML = `
+                    <span class="text-lg font-bold text-green-600">L1: ${scores[1]}</span>
+                    <span class="text-lg font-bold text-yellow-600 ml-3">L2: ${scores[2]}</span>
+                    <span class="text-lg font-bold text-red-600 ml-3">L3: ${scores[3]}</span>
+                `;
+            }
+            updateScoreDisplayAllLevels(); // Call on load
+
+            // Start the game at a chosen level
+            function selectLevel(level) {
+                currentLevel = level;
+                currentScore = scores[currentLevel]; // Load the score for the new level
+                updateScoreDisplay();
+                levelSelection.classList.add('hidden');
+                gameBoard.classList.remove('hidden');
+                changeLevelBtn.classList.remove('hidden');
+                loadNewQuestion();
+            }
+
+            // Go back to level selection
+            function showLevelSelection() {
+                gameBoard.classList.add('hidden');
+                changeLevelBtn.classList.add('hidden');
+                levelSelection.classList.remove('hidden');
+                updateScoreDisplayAllLevels();
+            }
+
+            // Load a new random question for the current level
+            function loadNewQuestion() {
+                currentInput = "";
+                answerInput.value = "";
+                // --- MODIFIED TO GENERATE EQUATION ---
+                currentEquation = generateEquation(currentLevel);
+                // --- END MODIFICATION ---
+                questionDisplay.innerHTML = renderEquation(currentEquation.text);
+            }
+
+            // Update the score display
+            function updateScoreDisplay() {
+                scores[currentLevel] = currentScore; // Save current score to the object
+                scoreDisplay.innerHTML = `<span class="text-2xl font-bold text-indigo-700">Level ${currentLevel} Score: ${currentScore}</span>`;
+            }
+
+            // Handle input from the calculator pad
+            function handleInput(value) {
+                if (value === 'submit') {
+                    if (currentInput === "" || currentInput === "-") return;
+                    checkAnswer();
+                } else if (value === 'clear') {
+                    currentInput = currentInput.slice(0, -1);
+                } else if (value === '-') {
+                    if (currentInput === "") {
+                        currentInput = "-";
+                    }
+                } else if (value === '.') {
+                    // Allow dot only if not in a fraction or if it's the first dot
+                    if (!currentInput.includes('.')) {
+                         currentInput += ".";
+                    }
+                } else if (value === '/') {
+                    // Allow fraction slash only once, and not as first char
+                    if (currentInput !== "" && !currentInput.includes('/') && currentInput !== "-") {
+                         currentInput += "/";
+                    }
+                } else {
+                    // Prevent leading zeros unless it's "0."
+                    if (currentInput === "0") {
+                        currentInput = value;
+                    } else {
+                        currentInput += value;
+                    }
+                }
+                answerInput.value = currentInput;
+            }
+
+            // Check the user's answer
+            function checkAnswer() {
+                let userAnswer;
+                // Check if input is a fraction
+                if (currentInput.includes('/')) {
+                    const parts = currentInput.split('/');
+                    // Check for valid fraction format e.g., "7/9", not "7/" or "/9"
+                    if (parts.length === 2 && parts[0] !== '' && parts[1] !== '' && parts[1] !== '0') {
+                        const numerator = parseFloat(parts[0]);
+                        const denominator = parseFloat(parts[1]);
+                        if (!isNaN(numerator) && !isNaN(denominator)) {
+                            userAnswer = numerator / denominator;
+                        } else {
+                            userAnswer = NaN; // Invalid number in fraction
+                        }
+                    } else {
+                        userAnswer = NaN; // Invalid fraction format
+                    }
+                } else {
+                    userAnswer = parseFloat(currentInput);
+                }
+
+                const correctAnswer = currentEquation.answer;
+                // Check for invalid number
+                if (isNaN(userAnswer)) {
+                    // You could show a small error, but for now just ignore submission
+                    return;
+                }
+
+                // Compare with a small tolerance for floating-point issues
+                const isCorrect = Math.abs(userAnswer - correctAnswer) < 0.001;
+                if (isCorrect) {
+                    currentScore++;
+                    correctSound.play(); // Play cheerful sound
+                    showFeedback(true);
+                } else {
+                    currentScore = Math.max(0, currentScore - 1); // Don't go below 0
+                    incorrectSound.play(); // Play incorrect sound
+                    showFeedback(false);
+                }
+                updateScoreDisplay();
+            }
+
+            // Show the feedback modal
+            function showFeedback(isCorrect) {
+                if (isCorrect) {
+                    feedbackIcon.textContent = "👍";
+                    feedbackMessage.textContent = "Correct!";
+                    feedbackMessage.className = "text-4xl font-bold text-green-600";
+                } else {
+                    feedbackIcon.textContent = "😢";
+                    feedbackMessage.textContent = "Incorrect!";
+                    feedbackMessage.className = "text-4xl font-bold text-red-600";
+                }
+
+                feedbackSteps.innerHTML = renderEquation(currentEquation.steps);
+                userAnswerDisplay.textContent = currentInput || "N/A";
+                correctAnswerDisplay.innerHTML = renderEquation(currentEquation.displayAnswer);
+                
+                modal.classList.remove('hidden');
+            }
+
+            // Hide the modal and load the next question
+            function nextQuestion() {
+                modal.classList.add('hidden');
+                loadNewQuestion();
+            }
+
+            // --- EVENT LISTENERS ---
+
+            // NEW: Start Game Button
+            startGameBtn.addEventListener('click', () => {
+                userName = nameInput.value.trim();
+                if (userName === "") {
+                    // Optional: Add feedback if name is empty
+                    alert("Please enter your name!");
+                    return;
+                }
+                
+                verificationCode = generateVerificationCode(userName);
+                verificationCodeDisplay.textContent = `Code: ${verificationCode}`;
+                
+                welcomeContainer.classList.add('hidden');
+                mainGameContainer.classList.remove('hidden');
+            });
+
+
+            // Level selection buttons
+            levelSelection.addEventListener('click', (e) => {
+                if (e.target.classList.contains('level-btn')) {
+                    const level = e.target.dataset.level;
+                    selectLevel(level);
+                }
+            });
+
+            // "Change Level" button
+            changeLevelBtn.addEventListener('click', showLevelSelection);
+
+            // Calculator pad (using event delegation)
+            calculatorPad.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    // Play click sound
+                    clickSound.currentTime = 0; // Rewind to start for rapid clicks
+                    clickSound.play();
+
+                    handleInput(e.target.dataset.value);
+                }
+            });
+
+            // Modal "Next Question" button
+            nextQuestionBtn.addEventListener('click', nextQuestion);
+
+            // Add custom styles for calculator buttons
+            const calcBtns = document.querySelectorAll('.calc-btn');
+            calcBtns.forEach(btn => {
+                // Add base styles
+                btn.classList.add(
+                    'text-3xl', 'font-semibold', 'py-5', 'rounded-lg', 'shadow-md', 
+                    'transition-all', 'duration-150', 'transform', 'active:scale-95'
+                 );
+                
+                // Add default colors unless it's a special button
+                if (!btn.classList.contains('bg-yellow-500') && 
+                    !btn.classList.contains('bg-gray-300') && 
+                    !btn.classList.contains('bg-green-500')) 
+                {
+                    btn.classList.add('bg-white', 'text-gray-800', 'border-b-4', 'border-gray-200', 'hover:bg-gray-50');
+                }
+                
+                // Adjust special button borders
+                 if (btn.classList.contains('bg-yellow-500')) {
+                    btn.classList.add('border-b-4', 'border-yellow-700');
+                }
+                if (btn.classList.contains('bg-gray-300')) {
+                    btn.classList.add('border-b-4', 'border-gray-400');
+                }
+                if (btn.classList.contains('bg-green-500')) {
+                    btn.classList.add('border-b-4', 'border-green-700');
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
